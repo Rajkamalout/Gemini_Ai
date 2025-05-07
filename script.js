@@ -7,7 +7,7 @@ const fileUploadWrapper = promptForm.querySelector(".file-upload-wrapper");
 const themeToggleBtn = document.querySelector("#theme-toggle-btn");
 // API Setup
 const API_KEY = "AIzaSyCxmqFdcJZQJM1ro0oV8OjDQJdT9Z4GfN0";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key{API_KEY}`;
 let controller, typingInterval;
 const chatHistory = [];
 const userData = { message: "", file: {} };
@@ -154,3 +154,51 @@ fileInput.addEventListener("change", () => {
     };
   };
 });
+// Cancel file upload
+document.querySelector("#cancel-file-btn").addEventListener("click", () => {
+  userData.file = {};
+  fileUploadWrapper.classList.remove("file-attached", "img-attached", "active");
+});
+// Stop Bot Response
+document.querySelector("#stop-response-btn").addEventListener("click", () => {
+  controller?.abort();
+  userData.file = {};
+  clearInterval(typingInterval);
+  chatsContainer
+    .querySelector(".bot-message.loading")
+    .classList.remove("loading");
+  document.body.classList.remove("bot-responding");
+});
+// Toggle dark/light theme
+themeToggleBtn.addEventListener("click", () => {
+  const isLightTheme = document.body.classList.toggle("light-theme");
+  localStorage.setItem("themeColor", isLightTheme ? "light_mode" : "dark_mode");
+  themeToggleBtn.textContent = isLightTheme ? "dark_mode" : "light_mode";
+});
+// Delete all chats
+document.querySelector("#delete-chats-btn").addEventListener("click", () => {
+  chatHistory.length = 0;
+  chatsContainer.innerHTML = "";
+  document.body.classList.remove("chats-active", "bot-responding");
+});
+// Handle suggestions click
+document.querySelectorAll(".suggestions-item").forEach((suggestion) => {
+  suggestion.addEventListener("click", () => {
+    promptInput.value = suggestion.querySelector(".text").textContent;
+    promptForm.dispatchEvent(new Event("submit"));
+  });
+});
+// Show/hide controls for mobile on prompt input focus
+document.addEventListener("click", ({ target }) => {
+  const wrapper = document.querySelector(".prompt-wrapper");
+  const shouldHide =
+    target.classList.contains("prompt-input") ||
+    (wrapper.classList.contains("hide-controls") &&
+      (target.id === "add-file-btn" || target.id === "stop-response-btn"));
+  wrapper.classList.toggle("hide-controls", shouldHide);
+});
+// Add event listeners for form submission and file input click
+promptForm.addEventListener("submit", handleFormSubmit);
+promptForm
+  .querySelector("#add-file-btn")
+  .addEventListener("click", () => fileInput.click());
